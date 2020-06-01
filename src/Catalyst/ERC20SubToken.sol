@@ -8,10 +8,16 @@ import "./ERC20Group.sol";
 
 
 contract ERC20SubToken is SuperOperators, MetaTransactionReceiver {
-    // TODO add natspec, currently block by solidity compiler issue
+    /// @notice emitted when tokens are transfered from one address to another.
+    /// @param from address from which the token are transfered from (zero means tokens are minted).
+    /// @param to destination address which the token are transfered to (zero means tokens are burnt).
+    /// @param value amount of tokens transferred.
     event Transfer(address indexed from, address indexed to, uint256 value);
 
-    // TODO add natspec, currently block by solidity compiler issue
+    /// @notice emitted when owner grant transfer rights to another address
+    /// @param owner address allowing its token to be transferred.
+    /// @param spender address allowed to spend on behalf of `owner`
+    /// @param value amount of tokens allowed.
     event Approval(address indexed owner, address indexed spender, uint256 value);
 
     struct Origin {
