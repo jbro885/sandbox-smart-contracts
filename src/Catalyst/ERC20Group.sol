@@ -100,7 +100,7 @@ contract ERC20Group is SuperOperators, MetaTransactionReceiver {
                 bal = bal.updateTokenBalance(index, amounts[i], ObjectLib32.Operations.ADD);
                 supply = supply.updateTokenBalance(index, amounts[i], ObjectLib32.Operations.ADD);
             }
-            _erc20s[ids[i]].emitTransferEvent(address(0), to, amounts[i]);
+            // _erc20s[ids[i]].emitTransferEvent(address(0), to, amounts[i]);
         }
         if (lastBin != 2**256 - 1) {
             _packedTokenBalance[to][lastBin] = bal;
