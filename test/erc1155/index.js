@@ -943,9 +943,7 @@ module.exports = (init, extensions) => {
       function deployERC1155TokenReceiver(...args) {
         return receiverFactory.deploy(...args);
       }
-      console.log('address', contractAddress);
       const contract = new Contract(contractAddress, erc1155ABI, ethersProvider);
-      console.log('contract', contract);
       const owner = users[0];
       const user0 = users[1];
       const user1 = users[2];
@@ -989,10 +987,8 @@ module.exports = (init, extensions) => {
   // add tests
   describe("mint", function (it) {
     it("minting an item results in a TransferSingle event", async function ({contract, mint, user0}) {
-      console.log("mint test example", mint);
-      const {receipt, tokenId} = await mint(user0);
-      console.log(receipt, tokenId);
-      console.log("contract", contract);
+      // TODO
+      // const {receipt, tokenId} = await mint(user0);
     });
   });
 

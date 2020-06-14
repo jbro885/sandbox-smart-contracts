@@ -2,30 +2,9 @@ const {ethers, getNamedAccounts, ethereum} = require("@nomiclabs/buidler");
 const erc1155Tests = require("../erc1155")(
   async () => {
     const {catalystMinter, deployer, others} = await getNamedAccounts();
-    // console.log('deployments', await ethers.getContract("CatalystMinter"))
-    console.log('is there a CatalystMinter', await ethers.getContractOrNull("CatalystMinter"))
-    console.log('is there a Land', await ethers.getContractOrNull("Land"))
-
     await deployments.fixture();
-
-    console.log('is there a CatalystMinter', await ethers.getContractOrNull("CatalystMinter"))
-    console.log('is there a Land', await ethers.getContractOrNull("Land"))
-
     const contract = await ethers.getContract("CatalystMinter");
-    // console.log('contractminter', contract);
-
     // await contract.connect(contract.provider.getSigner(catalystMinter)).then((tx) => tx.wait());
-
-    // mint(
-    // address from,
-    // uint40 packId,
-    // bytes32 metadataHash,
-    // uint256 catalystId,
-    // uint256[] calldata gemIds,
-    // uint256 quantity,
-    // address to,
-    // bytes calldata data
-    // )
 
     let counter = 0;
 
@@ -43,7 +22,6 @@ const erc1155Tests = require("../erc1155")(
   },
   {
     batchTransfer: true,
-    burn: false,
     mandatoryERC1155Receiver: true,
   }
 );
