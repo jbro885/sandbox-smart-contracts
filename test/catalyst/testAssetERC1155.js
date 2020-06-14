@@ -1,13 +1,20 @@
 const {ethers, getNamedAccounts, ethereum} = require("@nomiclabs/buidler");
 const erc1155Tests = require("../erc1155")(
   async () => {
-    const {catalystMinter, others} = await getNamedAccounts();
+    const {catalystMinter, deployer, others} = await getNamedAccounts();
+    // console.log('deployments', await ethers.getContract("CatalystMinter"))
+    console.log('is there a CatalystMinter', await ethers.getContractOrNull("CatalystMinter"))
+    console.log('is there a Land', await ethers.getContractOrNull("Land"))
 
     await deployments.fixture();
 
-    const contract = await ethers.getContract("CatalystMinter");
+    console.log('is there a CatalystMinter', await ethers.getContractOrNull("CatalystMinter"))
+    console.log('is there a Land', await ethers.getContractOrNull("Land"))
 
-    await contract.connect(contract.provider.getSigner(catalystMinter)).then((tx) => tx.wait());
+    const contract = await ethers.getContract("CatalystMinter");
+    // console.log('contractminter', contract);
+
+    // await contract.connect(contract.provider.getSigner(catalystMinter)).then((tx) => tx.wait());
 
     // mint(
     // address from,
@@ -20,15 +27,23 @@ const erc1155Tests = require("../erc1155")(
     // bytes calldata data
     // )
 
+    let counter = 0;
+
     // eslint-disable-next-line max-params
     async function mint(from, packId, metadataHash, catalystId, gemIds, quantity, to, data) {
-      await waitFor(contract.mint(from, packId, metadataHash, catalystId, gemIds, quantity, to, data));
+      const tokenId = await contract
+        .connect(contract.provider.getSigner(deployer))
+        .functions.mint(from, packId, metadataHash, catalystId, gemIds, quantity, to, data);
+      const receipt = await tx.wait();
+      counter++;
+      return {receipt, tokenId};
     }
-    return {ethereum, contractAddress: contract.address, users: others, mint};
+
+    return {ethereum, contractAddress: contract.address, users: others, mint, deployer};
   },
   {
     batchTransfer: true,
-    burn: true,
+    burn: false,
     mandatoryERC1155Receiver: true,
   }
 );

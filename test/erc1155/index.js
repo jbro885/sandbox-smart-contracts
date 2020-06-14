@@ -4,7 +4,7 @@ const ethers = require("ethers");
 const {Contract, ContractFactory} = ethers;
 const {Web3Provider} = ethers.providers;
 
-// ERC1155BaseToken
+// MintableERC1155Token
 const erc1155ABI = [
   {
     inputs: [
@@ -16,6 +16,11 @@ const erc1155ABI = [
       {
         internalType: "address",
         name: "admin",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "initialMinter",
         type: "address",
       },
     ],
@@ -83,6 +88,25 @@ const erc1155ABI = [
       },
     ],
     name: "MetaTransactionProcessor",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "address",
+        name: "minter",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "bool",
+        name: "enabled",
+        type: "bool",
+      },
+    ],
+    name: "Minter",
     type: "event",
   },
   {
@@ -271,6 +295,29 @@ const erc1155ABI = [
   {
     inputs: [
       {
+        internalType: "address",
+        name: "to",
+        type: "address",
+      },
+      {
+        internalType: "uint256[]",
+        name: "ids",
+        type: "uint256[]",
+      },
+      {
+        internalType: "uint256[]",
+        name: "amounts",
+        type: "uint256[]",
+      },
+    ],
+    name: "batchMint",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
         internalType: "uint256",
         name: "id",
         type: "uint256",
@@ -386,6 +433,25 @@ const erc1155ABI = [
         type: "address",
       },
     ],
+    name: "isMinter",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "who",
+        type: "address",
+      },
+    ],
     name: "isSuperOperator",
     outputs: [
       {
@@ -395,6 +461,29 @@ const erc1155ABI = [
       },
     ],
     stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "to",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "id",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+    ],
+    name: "mint",
+    outputs: [],
+    stateMutability: "nonpayable",
     type: "function",
   },
   {
@@ -526,6 +615,24 @@ const erc1155ABI = [
     inputs: [
       {
         internalType: "address",
+        name: "minter",
+        type: "address",
+      },
+      {
+        internalType: "bool",
+        name: "enabled",
+        type: "bool",
+      },
+    ],
+    name: "setMinter",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
         name: "superOperator",
         type: "address",
       },
@@ -556,7 +663,7 @@ const erc1155ABI = [
         type: "bool",
       },
     ],
-    stateMutability: "view",
+    stateMutability: "pure",
     type: "function",
   },
 ];
@@ -645,9 +752,6 @@ const receiver = {
     },
   ],
   bytecode: "0x",
-  deployedBytecode: "0x",
-  linkReferences: {},
-  deployedLinkReferences: {},
 };
 
 // contract ERC20
@@ -808,9 +912,6 @@ const mandatoryReceiver = {
     },
   ],
   bytecode: "0x",
-  deployedBytecode: "0x",
-  linkReferences: {},
-  deployedLinkReferences: {},
 };
 
 module.exports = (init, extensions) => {
@@ -819,6 +920,7 @@ module.exports = (init, extensions) => {
   function preTest(test) {
     return async () => {
       const {ethereum, contractAddress, mint, deployer, users} = await init();
+
       const ethersProvider = new Web3Provider(ethereum);
       const mandatoryReceiverFactory = new ContractFactory(
         mandatoryReceiver.abi,
@@ -841,8 +943,9 @@ module.exports = (init, extensions) => {
       function deployERC1155TokenReceiver(...args) {
         return receiverFactory.deploy(...args);
       }
-
+      console.log('address', contractAddress);
       const contract = new Contract(contractAddress, erc1155ABI, ethersProvider);
+      console.log('contract', contract);
       const owner = users[0];
       const user0 = users[1];
       const user1 = users[2];
@@ -886,14 +989,10 @@ module.exports = (init, extensions) => {
   // add tests
   describe("mint", function (it) {
     it("minting an item results in a TransferSingle event", async function ({contract, mint, user0}) {
+      console.log("mint test example", mint);
       const {receipt, tokenId} = await mint(user0);
-      const eventsMatching = await contract.queryFilter(contract.filters.Transfer(), receipt.blockNumber);
-      assert.equal(eventsMatching.length, 1);
-      const transferEvent = eventsMatching[0];
-      console.log('transferEvent', transferEvent);
-      assert.equal(transferEvent.args[0], zeroAddress);
-      assert.equal(transferEvent.args[1], user0);
-      assert(transferEvent.args[2].eq(tokenId));
+      console.log(receipt, tokenId);
+      console.log("contract", contract);
     });
   });
 
