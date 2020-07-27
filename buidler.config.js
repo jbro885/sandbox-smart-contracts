@@ -69,7 +69,7 @@ module.exports = {
     deployer: {
       default: 1,
       1: "0x18dd4e0eb8699eA4FeE238dE41ECfb95e32272f8",
-      4: "0x61c461EcC993aaDEB7e4b47E96d1B8cC37314B20",
+      4: "0xfB56eb456045e22c9e78C560E9572801b011e8Eb", // "0x61c461EcC993aaDEB7e4b47E96d1B8cC37314B20", // Rinkeby
       42: "0x61c461EcC993aaDEB7e4b47E96d1B8cC37314B20",
       314159: "0x61c461EcC993aaDEB7e4b47E96d1B8cC37314B20",
     }, // deploy contracts and make sure they are set up correctly
@@ -78,7 +78,7 @@ module.exports = {
       default: 2,
       // 4: "0x5b4c9eae565c1ba9eb65365aa02ee9fb0a653ce5",
       1: "0xeaa0993e1d21c2103e4f172a20d29371fbaf6d06", // multi sig wallet
-      4: "0xcbc70EcCd52bF3910CDC1455E6D2Bd45725F573D", // test multi sig wallet
+      4: "0xfB56eb456045e22c9e78C560E9572801b011e8Eb", // "0xcbc70EcCd52bF3910CDC1455E6D2Bd45725F573D", // test multi sig wallet
       42: "0x61c461EcC993aaDEB7e4b47E96d1B8cC37314B20",
       314159: "0x61c461EcC993aaDEB7e4b47E96d1B8cC37314B20",
     },
@@ -110,7 +110,7 @@ module.exports = {
     landAdmin: {
       default: 2,
       1: "0xeaa0993e1d21c2103e4f172a20d29371fbaf6d06",
-      4: "0x61c461EcC993aaDEB7e4b47E96d1B8cC37314B20",
+      4: "0xfB56eb456045e22c9e78C560E9572801b011e8Eb", // "0x61c461EcC993aaDEB7e4b47E96d1B8cC37314B20", // Rinkeby
       42: "0x61c461EcC993aaDEB7e4b47E96d1B8cC37314B20",
       314159: "0x61c461EcC993aaDEB7e4b47E96d1B8cC37314B20",
     },
@@ -170,6 +170,10 @@ module.exports = {
     },
     coverage: {
       url: "http://localhost:5458",
+    },
+    holly_test_rinkeby: {
+      url: eth_node("rinkeby"),
+      accounts,
     },
     // wati for : https://github.com/nomiclabs/buidler/pull/522
     // buidlerevm: {
