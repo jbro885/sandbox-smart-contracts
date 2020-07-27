@@ -1,0 +1,27 @@
+@startuml
+interface NativeMetaTransaction
+interface ERC20
+interface ERC721
+interface ERC1155
+
+Sand <|-- NativeMetaTransaction
+Sand <|-- ERC20
+
+Asset <|-- ERC721
+Asset <|-- ERC1155
+class Asset {
+}
+
+
+Land <|-- ERC721
+class Land {
+}
+
+Gem <|-- ERC20
+class Gem {
+}
+
+Catalyst <|-- ERC20
+class Catalyst {
+}
+@enduml
