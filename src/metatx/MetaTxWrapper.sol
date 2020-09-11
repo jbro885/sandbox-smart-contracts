@@ -18,20 +18,20 @@ contract MetaTxWrapper is BaseRelayRecipient {
         address signer = _msgSender();
         // @review delete all console logs
         console.logBytes(msg.data);
-        address firstParam = abi.decode(msg.data[4:], (address));
+        // address firstParam = abi.decode(msg.data[4:], (address));
         console.log("msg.sender: ", msg.sender);
         console.log("signer: ", signer);
-        console.log("firstParam: ", firstParam);
-        require(signer == firstParam, "INVALID_METATX_DATA");
+        // console.log("firstParam: ", firstParam);
+        // require(signer == firstParam, "INVALID_METATX_DATA");
         address target = _forwardTo;
-        (bool success, ) = target.call{value: msg.value}(msg.data);
+        // (bool success, ) = target.call{value: msg.value}(msg.data);
         // require(success, "FORWARDED_CALL_FAILED");
-        if (!success) {
-            assembly {
-                let returnDataSize := returndatasize()
-                returndatacopy(0, 0, returnDataSize)
-                revert(0, returnDataSize)
-            }
-        }
+        // if (!success) {
+        //     assembly {
+        //         let returnDataSize := returndatasize()
+        //         returndatacopy(0, 0, returnDataSize)
+        //         revert(0, returnDataSize)
+        //     }
+        // }
     }
 }
