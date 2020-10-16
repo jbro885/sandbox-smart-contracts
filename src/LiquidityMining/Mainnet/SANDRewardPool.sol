@@ -7,6 +7,11 @@ import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "../IRewardDistributionRecipient.sol";
 
 
+interface FutureRewardPool {
+    function stakedFor(address inBehalfOf, uint256 amount) external;
+}
+
+
 contract LPTokenWrapper {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
@@ -30,10 +35,14 @@ contract LPTokenWrapper {
         uni.safeTransferFrom(msg.sender, address(this), amount);
     }
 
-    function withdraw(uint256 amount) public virtual {
+    function withdraw(uint256 amount) public {
+        withdrawTo(amount, msg.sender);
+    }
+
+    function withdrawTo(uint256 amount, address to) public virtual {
         _totalSupply = _totalSupply.sub(amount);
         _balances[msg.sender] = _balances[msg.sender].sub(amount);
-        uni.safeTransfer(msg.sender, amount);
+        uni.safeTransfer(to, amount);
     }
 }
 
@@ -86,15 +95,22 @@ contract SANDRewardPool is LPTokenWrapper, IRewardDistributionRecipient {
         emit Staked(msg.sender, amount);
     }
 
-    function withdraw(uint256 amount) public override updateReward(msg.sender) {
+    function withdrawTo(uint256 amount, address to) public override updateReward(msg.sender) {
         require(amount > 0, "Cannot withdraw 0");
-        super.withdraw(amount);
+        super.withdrawTo(amount, to);
         emit Withdrawn(msg.sender, amount);
     }
 
     function exit() external {
         withdraw(balanceOf(msg.sender));
         getReward();
+    }
+
+    function exitAndRestake(FutureRewardPool to) external {
+        uint256 amount = balanceOf(msg.sender);
+        withdrawTo(amount, address(to));
+        getReward();
+        to.stakedFor(msg.sender, amount);
     }
 
     function getReward() public updateReward(msg.sender) {
