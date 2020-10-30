@@ -155,7 +155,7 @@ contract ERC20BaseToken is SuperOperators, ERC20, ERC20Extended {
         address owner,
         address spender,
         uint256 amountNeeded
-    ) internal {
+    ) internal virtual {
         if (amountNeeded > 0 && !isSuperOperator(spender)) {
             uint256 currentAllowance = _allowances[owner][spender];
             if (currentAllowance < amountNeeded) {
@@ -168,7 +168,7 @@ contract ERC20BaseToken is SuperOperators, ERC20, ERC20Extended {
         address owner,
         address spender,
         uint256 amount
-    ) internal {
+    ) internal virtual {
         require(owner != address(0) && spender != address(0), "Cannot approve with 0x0");
         _allowances[owner][spender] = amount;
         emit Approval(owner, spender, amount);
