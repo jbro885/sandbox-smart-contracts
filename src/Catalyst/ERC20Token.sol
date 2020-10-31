@@ -7,7 +7,7 @@ import "../common/interfaces/ERC677.sol";
 import "../common/interfaces/ERC677Receiver.sol";
 
 
-contract GemToken is ERC20BasicApproveExtension, ERC20BaseToken, TheSandbox712, ERC677 {
+contract ERC20Token is ERC20BasicApproveExtension, ERC20BaseToken, TheSandbox712, ERC677 {
     mapping(address => uint256) public nonces;
 
     /// @notice Function to permit the expenditure of SAND by a nominated spender
