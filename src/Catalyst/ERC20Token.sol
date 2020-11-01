@@ -3,11 +3,11 @@ pragma solidity 0.6.5;
 import "../BaseWithStorage/wip/ERC20BaseToken.sol";
 import "../BaseWithStorage/ERC20BasicApproveExtension.sol";
 import "../Base/TheSandbox712.sol";
-import "../common/interfaces/ERC677.sol";
+import "../Catalyst/ERC677Token.sol";
 import "../common/interfaces/ERC677Receiver.sol";
 
 
-contract ERC20Token is ERC20BasicApproveExtension, ERC20BaseToken, TheSandbox712, ERC677 {
+contract ERC20Token is ERC20BasicApproveExtension, TheSandbox712, ERC677Token {
     mapping(address => uint256) public nonces;
 
     /// @notice Function to permit the expenditure of SAND by a nominated spender
@@ -46,26 +46,6 @@ contract ERC20Token is ERC20BasicApproveExtension, ERC20BaseToken, TheSandbox712
         uint256[] calldata amounts
     ) external {}
 
-    /**
-     * @dev transfer token to a contract address with additional data if the recipient is a contact.
-     * @param _to The address to transfer to.
-     * @param _value The amount to be transferred.
-     * @param _data The extra data to be passed to the receiving contract.
-     */
-    function transferAndCall(
-        address _to,
-        uint256 _value,
-        bytes calldata _data
-    ) external override returns (bool success) {
-        _transfer(msg.sender, _to, _value);
-        emit Transfer(msg.sender, _to, _value, _data);
-        if (isContract(_to)) {
-            ERC677Receiver receiver = ERC677Receiver(_to);
-            receiver.onTokenTransfer(msg.sender, _value, _data);
-        }
-        return true;
-    }
-
     // //////////////////// INTERNALS ////////////////////
 
     function _addAllowanceIfNeeded(
@@ -84,15 +64,6 @@ contract ERC20Token is ERC20BasicApproveExtension, ERC20BaseToken, TheSandbox712
         ERC20BaseToken._approveFor(owner, spender, amount);
     }
 
-    function isContract(address _addr) private view returns (bool hasCode) {
-        uint256 length;
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            length := extcodesize(_addr)
-        }
-        return length > 0;
-    }
-
     // //////////////////////// DATA /////////////////////
     bytes32 constant PERMIT_TYPEHASH = keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
 
@@ -101,5 +72,5 @@ contract ERC20Token is ERC20BasicApproveExtension, ERC20BaseToken, TheSandbox712
         string memory name,
         string memory symbol,
         address admin
-    ) public ERC20BaseToken(name, symbol, admin) {}
+    ) public ERC677Token(name, symbol, admin) {}
 }
