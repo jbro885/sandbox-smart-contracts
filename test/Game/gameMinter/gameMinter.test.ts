@@ -459,7 +459,8 @@ describe('GameMinter', function () {
   });
   describe('GameMinter: Sandbox MetaTXs', function () {
     let sandAsExecutionAdmin: Contract;
-    let gameId1: BigNumber;
+    let sandAsExecutionOperator: Contract;
+    let gameId2: BigNumber;
     let users: User[];
     let GameMinter: Contract;
     let sandContract: Contract;
@@ -481,6 +482,10 @@ describe('GameMinter', function () {
       sandContract = await ethers.getContract('Sand');
       sandAsExecutionAdmin = await sandContract.connect(
         ethers.provider.getSigner(sandExecutionAdmin)
+      );
+
+      sandAsExecutionOperator = await sandContract.connect(
+        ethers.provider.getSigner(users[6].address)
       );
       await sandAsExecutionAdmin.setExecutionOperator(users[6].address, true);
       gameTokenContract = await ethers.getContract('GameToken');
@@ -509,39 +514,14 @@ describe('GameMinter', function () {
       ({assets, quantities} = await supplyAssets(
         users[1].address,
         users[1].address,
-        [77, 3, 14]
+        [42, 3]
       ));
 
       ({
         assets: editorAssets,
         quantities: editorQuantities,
-      } = await supplyAssets(users[8].address, users[8].address, [11]));
+      } = await supplyAssets(users[8].address, users[8].address, [5]));
     });
-
-    // it('MetaTx should fail with wrong "from" address', async function () {
-    //   const gas = 1000000;
-
-    //   const {data} = await GameMinter.populateTransaction.createGame(
-    //     users[4].address,
-    //     users[4].address,
-    //     [],
-    //     [],
-    //     ethers.constants.AddressZero,
-    //     'Sandbox MetaTx URI',
-    //     await getRandom()
-    //   );
-    //   const sandAsExecutionOperator = await sandContract.connect(
-    //     ethers.provider.getSigner(users[6].address)
-    //   );
-
-    //   await expect(
-    //     sandAsExecutionOperator.executeWithSpecificGas(
-    //       GameMinter.address,
-    //       gas,
-    //       data
-    //     )
-    //   ).to.be.revertedWith('FAIL');
-    // });
 
     it('should allow anyone to create a game via MetaTx', async function () {
       const gas = 1000000;
@@ -562,15 +542,19 @@ describe('GameMinter', function () {
         'Sandbox MetaTx URI',
         await getRandom()
       );
-      const sandAsExecutionOperator = await sandContract.connect(
-        ethers.provider.getSigner(users[6].address)
-      );
 
-      sandAsExecutionOperator.executeWithSpecificGas(
+      const receipt = await sandAsExecutionOperator.executeWithSpecificGas(
         GameMinter.address,
         gas,
         data
       );
+
+      const event = await expectEventWithArgs(
+        gameTokenContract,
+        receipt,
+        'Transfer'
+      );
+      gameId2 = event.args[2];
       const balancesAfter = await getTokenBalances(
         sandContract,
         users[1].address,
@@ -588,7 +572,50 @@ describe('GameMinter', function () {
       expect(gamesAfter).to.be.equal(gamesBefore.add(1));
     });
 
-    it('should allow GAME Owner to add assets via MetaTx', async function () {});
+    it('should allow GAME Owner to add assets via MetaTx', async function () {
+      const gas = 1000000;
+
+      const balancesBefore = await getTokenBalances(
+        sandContract,
+        users[1].address,
+        gameTokenFeeBeneficiary
+      );
+
+      const {data} = await GameMinter.populateTransaction.addAssets(
+        users[1].address,
+        gameId2,
+        assets,
+        quantities,
+        'Sandbox MetaTx URI',
+        users[8].address
+      );
+
+      const receipt = await sandAsExecutionOperator.executeWithSpecificGas(
+        GameMinter.address,
+        gas,
+        data
+      );
+      const event = await expectEventWithArgs(
+        gameTokenContract,
+        receipt,
+        'AssetsAdded'
+      );
+      const balancesAfter = await getTokenBalances(
+        sandContract,
+        users[1].address,
+        gameTokenFeeBeneficiary
+      );
+
+      expect(balancesAfter[0]).to.be.equal(
+        balancesBefore[0].sub(gameModificationFee)
+      );
+      expect(balancesAfter[1]).to.be.equal(
+        balancesBefore[1].add(gameModificationFee)
+      );
+      expect(event.args[0]).to.be.equal(gameId2);
+      expect(event.args[1]).to.deep.equal(assets);
+      expect(event.args[2]).to.deep.equal(quantities);
+    });
 
     it('should allow GAME Owner to remove assets via MetaTx', async function () {});
 
