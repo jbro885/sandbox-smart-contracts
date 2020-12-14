@@ -61,9 +61,10 @@ const setupTest = deployments.createFixture(
 );
 
 describe('GameMinter', function () {
-  // @note valid calls to minter can be 1 of 4 types:
+  // @note valid calls to minter can be 1 of 6 types:
   // - direct calls from either gameOwner or gameEditor
-  // - metaTXs on behalf of either gameOwner or gameEditor
+  // - Sandbox-style metaTXs on behalf of either gameOwner or gameEditor
+  // - ERC2771-style metaTXs on behalf of either gameOwner or gameEditor
   describe('GameMinter: Calling Directly', function () {
     let gameId1: BigNumber;
     let users: User[];
@@ -455,5 +456,92 @@ describe('GameMinter', function () {
       );
     });
   });
-  // describe('GameMinter: MetaTXs', function () {}); TODO
+  describe('GameMinter: Sandbox MetaTXs', function () {
+    let sandAsExecutionAdmin: Contract;
+    let gameId1: BigNumber;
+    let users: User[];
+    let GameMinter: Contract;
+    let sandContract: Contract;
+    let sandAsAdmin: Contract;
+    let gameTokenContract: Contract;
+    let assets: BigNumber[];
+    let quantities: number[];
+    let editorAssets: BigNumber[];
+    let editorQuantities: number[];
+    let gameTokenFeeBeneficiary: Address;
+
+    before(async function () {
+      ({GameMinter, users} = await setupTest());
+      const {
+        sandExecutionAdmin,
+        sandAdmin,
+        gameTokenAdmin,
+      } = await getNamedAccounts();
+      sandContract = await ethers.getContract('Sand');
+      sandAsExecutionAdmin = await sandContract.connect(
+        ethers.provider.getSigner(sandExecutionAdmin)
+      );
+      gameTokenContract = await ethers.getContract('GameToken');
+      sandAsAdmin = await sandContract.connect(
+        ethers.provider.getSigner(sandAdmin)
+      );
+      await sandAsAdmin.setSuperOperator(GameMinter.address, true);
+      const gameAsAdmin = await gameTokenContract.connect(
+        ethers.provider.getSigner(gameTokenAdmin)
+      );
+      await gameAsAdmin.changeMinter(GameMinter.address);
+
+      const signers = await ethers.getSigners();
+      gameTokenFeeBeneficiary = await signers[3].getAddress();
+
+      // Supply users with sand and assets:
+      await sandAsAdmin.transfer(
+        users[1].address,
+        BigNumber.from('1000000000000000000000000')
+      );
+      await sandAsAdmin.transfer(
+        users[8].address,
+        BigNumber.from('1000000000000000000000000')
+      );
+
+      ({assets, quantities} = await supplyAssets(
+        users[1].address,
+        users[1].address,
+        [77, 3, 14]
+      ));
+
+      ({
+        assets: editorAssets,
+        quantities: editorQuantities,
+      } = await supplyAssets(users[8].address, users[8].address, [11]));
+    });
+
+    it('MetaTx should fail with wrong "from" address', async function () {
+      // const gas =
+      // const data =
+      await expect(
+        sandAsExecutionAdmin.executeWithSpecificGas(
+          GameMinter.address,
+          gas,
+          data
+        )
+      ).to.be.revertedWith('FAIL');
+    });
+
+    it('should allow anyone to create a game via MetaTx', async function () {});
+
+    it('should allow GAME Owner to add assets via MetaTx', async function () {});
+
+    it('should allow GAME Owner to remove assets via MetaTx', async function () {});
+
+    it('should allow GAME Owner to set URI via MetaTx', async function () {});
+
+    it('MetaTx should fail with wrong "editor" address', async function () {});
+
+    it('should allow GAME Editor to add assets via MetaTx', async function () {});
+
+    it('should allow GAME Editor to remove assets via MetaTx', async function () {});
+
+    it('should allow GAME Editor to set URI via MetaTx', async function () {});
+  });
 });
