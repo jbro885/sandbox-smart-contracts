@@ -14,6 +14,7 @@ import {
   gameMintingFee,
   gameModificationFee,
 } from '../../../data/gameMinterFees';
+import {isAddress} from 'ethers/lib/utils';
 
 const rng = new Prando('GameMinter');
 
@@ -481,6 +482,7 @@ describe('GameMinter', function () {
       sandAsExecutionAdmin = await sandContract.connect(
         ethers.provider.getSigner(sandExecutionAdmin)
       );
+      await sandAsExecutionAdmin.setExecutionOperator(users[6].address, true);
       gameTokenContract = await ethers.getContract('GameToken');
       sandAsAdmin = await sandContract.connect(
         ethers.provider.getSigner(sandAdmin)
@@ -516,19 +518,75 @@ describe('GameMinter', function () {
       } = await supplyAssets(users[8].address, users[8].address, [11]));
     });
 
-    it('MetaTx should fail with wrong "from" address', async function () {
-      // const gas =
-      // const data =
-      await expect(
-        sandAsExecutionAdmin.executeWithSpecificGas(
-          GameMinter.address,
-          gas,
-          data
-        )
-      ).to.be.revertedWith('FAIL');
-    });
+    // it('MetaTx should fail with wrong "from" address', async function () {
+    //   const gas = 1000000;
 
-    it('should allow anyone to create a game via MetaTx', async function () {});
+    //   const {data} = await GameMinter.populateTransaction.createGame(
+    //     users[4].address,
+    //     users[4].address,
+    //     [],
+    //     [],
+    //     ethers.constants.AddressZero,
+    //     'Sandbox MetaTx URI',
+    //     await getRandom()
+    //   );
+    //   const sandAsExecutionOperator = await sandContract.connect(
+    //     ethers.provider.getSigner(users[6].address)
+    //   );
+
+    //   await expect(
+    //     sandAsExecutionOperator.executeWithSpecificGas(
+    //       GameMinter.address,
+    //       gas,
+    //       data
+    //     )
+    //   ).to.be.revertedWith('FAIL');
+    // });
+
+    it('should allow anyone to create a game via MetaTx', async function () {
+      const gas = 1000000;
+
+      const balancesBefore = await getTokenBalances(
+        sandContract,
+        users[1].address,
+        gameTokenFeeBeneficiary
+      );
+      const gamesBefore = await gameTokenContract.balanceOf(users[1].address);
+
+      const {data} = await GameMinter.populateTransaction.createGame(
+        users[1].address,
+        users[1].address,
+        [],
+        [],
+        users[8].address,
+        'Sandbox MetaTx URI',
+        await getRandom()
+      );
+      const sandAsExecutionOperator = await sandContract.connect(
+        ethers.provider.getSigner(users[6].address)
+      );
+
+      sandAsExecutionOperator.executeWithSpecificGas(
+        GameMinter.address,
+        gas,
+        data
+      );
+      const balancesAfter = await getTokenBalances(
+        sandContract,
+        users[1].address,
+        gameTokenFeeBeneficiary
+      );
+
+      const gamesAfter = await gameTokenContract.balanceOf(users[1].address);
+
+      expect(balancesAfter[0]).to.be.equal(
+        balancesBefore[0].sub(gameMintingFee)
+      );
+      expect(balancesAfter[1]).to.be.equal(
+        balancesBefore[1].add(gameMintingFee)
+      );
+      expect(gamesAfter).to.be.equal(gamesBefore.add(1));
+    });
 
     it('should allow GAME Owner to add assets via MetaTx', async function () {});
 
