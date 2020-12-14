@@ -16,8 +16,8 @@ contract GameMinter is WithMetaTransaction, IGameMinter {
     IGameToken internal immutable _gameToken;
 
     uint256 internal constant SAND_DECIMALS = 10**18;
-    uint256 internal immutable GAME_MINTING_FEE;
-    uint256 internal immutable GAME_MODIFICATION_FEE;
+    uint256 internal immutable _gameMintingFee;
+    uint256 internal immutable _gameModificationFee;
     address internal immutable _feeBeneficiary;
     IERC20 internal immutable _sand;
 
@@ -33,8 +33,8 @@ contract GameMinter is WithMetaTransaction, IGameMinter {
     ) {
         _gameToken = gameTokenContract;
         _setMetaTransactionProcessor(metaTransactionContract, METATX_SANDBOX);
-        GAME_MINTING_FEE = gameMintingFee;
-        GAME_MODIFICATION_FEE = gameModificationFee;
+        _gameMintingFee = gameMintingFee;
+        _gameModificationFee = gameModificationFee;
         _feeBeneficiary = feeBeneficiary;
         _sand = sand;
     }
@@ -57,7 +57,7 @@ contract GameMinter is WithMetaTransaction, IGameMinter {
         uint96 randomId
     ) external override returns (uint256 gameId) {
         require(msg.sender == from || _isValidMetaTx(from), "CREATE_ACCESS_DENIED");
-        _chargeSand(from, GAME_MINTING_FEE);
+        _chargeSand(from, _gameMintingFee);
         uint256 id = _gameToken.createGame(from, to, assetIds, values, editor, uri, randomId);
         return id;
     }
@@ -79,7 +79,7 @@ contract GameMinter is WithMetaTransaction, IGameMinter {
         address editor
     ) external override {
         _checkAuthorization(from, gameId, editor);
-        _chargeSand(from, GAME_MODIFICATION_FEE);
+        _chargeSand(from, _gameModificationFee);
         _gameToken.addAssets(from, gameId, assetIds, values, uri);
     }
 
@@ -102,7 +102,7 @@ contract GameMinter is WithMetaTransaction, IGameMinter {
         address editor
     ) external override {
         _checkAuthorization(from, gameId, editor);
-        _chargeSand(from, GAME_MODIFICATION_FEE);
+        _chargeSand(from, _gameModificationFee);
         _gameToken.removeAssets(gameId, assetIds, values, to, uri);
     }
 
@@ -119,14 +119,14 @@ contract GameMinter is WithMetaTransaction, IGameMinter {
         address editor
     ) external override {
         _checkAuthorization(from, gameId, editor);
-        _chargeSand(from, GAME_MODIFICATION_FEE);
+        _chargeSand(from, _gameModificationFee);
         _gameToken.setTokenURI(gameId, uri);
     }
 
     function _chargeSand(address from, uint256 sandFee) internal {
         // @review is this assignment needed?
-        address feeBeneficiary = _feeBeneficiary;
-        if (feeBeneficiary != address(0) && sandFee != 0) {
+        // address feeBeneficiary = _feeBeneficiary;
+        if (_feeBeneficiary != address(0) && sandFee != 0) {
             _sand.transferFrom(from, _feeBeneficiary, sandFee);
         }
     }
