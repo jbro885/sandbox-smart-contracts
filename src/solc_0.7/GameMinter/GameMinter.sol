@@ -142,7 +142,7 @@ contract GameMinter is WithMetaTransaction, IGameMinter {
                 "AUTH_ACCESS_DENIED"
             );
         } else {
-            require(_isValidMetaTx(editor), "METATX_ACCESS_DENIED");
+            require(_isValidMetaTx(editor) && _gameToken.isGameEditor(id, editor), "METATX_ACCESS_DENIED");
         }
     }
 }
