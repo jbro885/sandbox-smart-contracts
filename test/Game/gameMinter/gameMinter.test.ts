@@ -574,7 +574,6 @@ describe('GameMinter', function () {
 
     it('should allow GAME Owner to add assets via MetaTx', async function () {
       const gas = 1000000;
-
       const balancesBefore = await getTokenBalances(
         sandContract,
         users[1].address,
@@ -587,7 +586,7 @@ describe('GameMinter', function () {
         assets,
         quantities,
         'Sandbox MetaTx URI',
-        users[8].address
+        ethers.constants.AddressZero
       );
 
       const receipt = await sandAsExecutionOperator.executeWithSpecificGas(
@@ -617,11 +616,128 @@ describe('GameMinter', function () {
       expect(event.args[2]).to.deep.equal(quantities);
     });
 
-    it('should allow GAME Owner to remove assets via MetaTx', async function () {});
+    it('should allow GAME Owner to remove assets via MetaTx', async function () {
+      const gas = 1000000;
 
-    it('should allow GAME Owner to set URI via MetaTx', async function () {});
+      const balancesBefore = await getTokenBalances(
+        sandContract,
+        users[1].address,
+        gameTokenFeeBeneficiary
+      );
 
-    it('MetaTx should fail with wrong "editor" address', async function () {});
+      const {data} = await GameMinter.populateTransaction.removeAssets(
+        users[1].address,
+        gameId2,
+        [assets[0]],
+        [quantities[0]],
+        users[1].address,
+        'Sandbox MetaTx URI',
+        ethers.constants.AddressZero
+      );
+
+      const receipt = await sandAsExecutionOperator.executeWithSpecificGas(
+        GameMinter.address,
+        gas,
+        data
+      );
+      const event = await expectEventWithArgs(
+        gameTokenContract,
+        receipt,
+        'AssetsRemoved'
+      );
+      const balancesAfter = await getTokenBalances(
+        sandContract,
+        users[1].address,
+        gameTokenFeeBeneficiary
+      );
+
+      expect(balancesAfter[0]).to.be.equal(
+        balancesBefore[0].sub(gameModificationFee)
+      );
+      expect(balancesAfter[1]).to.be.equal(
+        balancesBefore[1].add(gameModificationFee)
+      );
+      expect(event.args[0]).to.be.equal(gameId2);
+      expect(event.args[1]).to.deep.equal([assets[0]]);
+      expect(event.args[2]).to.deep.equal([quantities[0]]);
+      expect(event.args[3]).to.be.equal(users[1].address);
+    });
+
+    it('should allow GAME Owner to set URI via MetaTx', async function () {
+      const gas = 1000000;
+      const balancesBefore = await getTokenBalances(
+        sandContract,
+        users[1].address,
+        gameTokenFeeBeneficiary
+      );
+      const {data} = await GameMinter.populateTransaction.setTokenUri(
+        users[1].address,
+        gameId2,
+        'Sandbox MetaTx change URI',
+        ethers.constants.AddressZero
+      );
+      const receipt = await sandAsExecutionOperator.executeWithSpecificGas(
+        GameMinter.address,
+        gas,
+        data
+      );
+      const event = await expectEventWithArgs(
+        gameTokenContract,
+        receipt,
+        'TokenURIChanged'
+      );
+      const balancesAfter = await getTokenBalances(
+        sandContract,
+        users[1].address,
+        gameTokenFeeBeneficiary
+      );
+      const newURI = await gameTokenContract.tokenURI(gameId2);
+
+      expect(newURI).to.be.equal('Sandbox MetaTx change URI');
+      expect(event.args[0]).to.be.equal(gameId2);
+      expect(event.args[1]).to.be.equal('Sandbox MetaTx change URI');
+      expect(balancesAfter[0]).to.be.equal(
+        balancesBefore[0].sub(gameModificationFee)
+      );
+      expect(balancesAfter[1]).to.be.equal(
+        balancesBefore[1].add(gameModificationFee)
+      );
+    });
+
+    it.skip('MetaTx should fail with wrong "editor" address', async function () {
+      const gas = 1000000;
+      const {data} = await GameMinter.populateTransaction.addAssets(
+        users[1].address,
+        gameId2,
+        assets,
+        quantities,
+        'Sandbox MetaTx URI',
+        users[9].address
+      );
+
+      const assetsBefore = await gameTokenContract.getAssetBalances(gameId2, [
+        assets[0],
+        assets[1],
+      ]);
+
+      const receipt = await sandAsExecutionOperator.executeWithSpecificGas(
+        GameMinter.address,
+        gas,
+        data
+      );
+      const events = await expectEventWithArgs(
+        gameTokenContract,
+        receipt,
+        'AssetsAdded'
+      );
+      // @note The revert message is maybe not surfacing... try to test failure another way, ie: via lack of events && no GAME state changes
+      const assetsAfter = await gameTokenContract.getAssetBalances(gameId2, [
+        assets[0],
+        assets[1],
+      ]);
+      expect(events.args.length).to.be.equal(0);
+      expect(assetsAfter).to.deep.equal(assetsBefore);
+    });
 
     it('should allow GAME Editor to add assets via MetaTx', async function () {});
 
